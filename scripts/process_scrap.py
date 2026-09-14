@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import time
 from datetime import datetime
 import requests
 from google import genai
@@ -27,7 +28,6 @@ api_key = os.environ.get("GEMINI_API_KEY")
 github_token = os.environ.get("GITHUB_TOKEN")
 repo = os.environ.get("GITHUB_REPOSITORY")
 
-# 폴더 생성
 os.makedirs("scraps", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 os.makedirs("images", exist_ok=True)
@@ -42,15 +42,12 @@ print(f"발견된 이미지 URL 개수: {len(all_image_urls)}")
 
 # 다중 헤더 시도를 통한 안전한 이미지 다운로드 함수
 def fetch_image_bytes(url):
-    # 1차 시도: 일반 웹 브라우저 헤더 (공개 저장소/AWS 리다이렉트 대응)
     try:
-        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}, timeout=20)
+        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=20)
         if res.status_code == 200 and len(res.content) > 0:
             return res.content
     except Exception:
         pass
-    
-    # 2차 시도: GitHub 인증 토큰 헤더
     if github_token:
         try:
             res = requests.get(url, headers={"Authorization": f"token {github_token}", "User-Agent": "Mozilla/5.0"}, timeout=20)
@@ -74,23 +71,23 @@ for idx, img_url in enumerate(all_image_urls):
         with open(img_filename, "wb") as f:
             f.write(content)
         saved_images.append(img_filename)
-        print(f"이미지 저장 성공: {img_filename} ({len(content)} bytes)")
+        print(f"이미지 저장 성공: {img_filename}")
     else:
-        print(f"이미지 다운로드 최종 실패: {img_url}")
+        print(f"이미지 다운로드 실패: {img_url}")
 
 # Gemini API 클라이언트 초기화
 client = genai.Client(api_key=api_key)
 
 prompt = f"""
 당신은 개인 지식 아카이빙 전문가입니다.
-사용자가 수집한 정보(제목: '{issue_title}', 본문: '{issue_body}')와 함께 제공된 이미지를 시각적으로 꼼꼼히 분석하여 JSON 형식으로 구조화해 주세요.
+사용자가 수집한 정보(제목: '{issue_title}', 본문: '{issue_body}')와 이미지를 꼼꼼히 분석하여 JSON 형식으로 구조화해 주세요.
 
 규칙:
 1. `summary`: 이미지의 내용과 본문 핵심을 포함한 2~3줄 요약 (한국어)
 2. `category`: 주 카테고리 1개 (예: 반려동물, 사진/조명, 디자인, 인테리어, 테크 등)
 3. `tags`: 검색용 키워드 태그 3~6개 리스트 (문자열 배열)
 4. `ocr_text`: 이미지 속 텍스트가 있다면 글자 그대로 추출 (없으면 빈 문자열)
-5. `user_intent`: 사용자가 이 시각자료를 저장한 실질적 목적 추정 1줄
+5. `user_intent`: 사용자가 이 자료를 저장한 실질적 목적 추정 1줄
 
 반드시 순수 JSON 형식만 반환하세요.
 """
@@ -105,21 +102,29 @@ for img_path in saved_images:
     except Exception as e:
         print(f"이미지 첨부 실패: {e}")
 
-print("Gemini 3.6 Flash 모델로 분석 요청 중...")
-try:
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=contents
-    )
-except Exception as e:
-    print(f"기본 모델 실패, 대체 모델 시도: {e}")
-    response = client.models.generate_content(
-        model="gemini-3.5-flash",
-        contents=contents
-    )
+# 구글 서버 과부하(503) 대응: 자동 재시도 및 대체 모델 캐스케이드
+candidate_models = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite"]
+response = None
+
+for model_name in candidate_models:
+    for attempt in range(2):  # 각 모델당 2회 재시도
+        try:
+            print(f"[{model_name}] 분석 요청 중... (시도 {attempt+1})")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=contents
+            )
+            if response and response.text:
+                break
+        except Exception as e:
+            print(f"[{model_name}] 일시적 오류 발생: {e}")
+            time.sleep(3)  # 3초 대기 후 재시도
+    if response and response.text:
+        print(f"[{model_name}] 성공!")
+        break
 
 # 안전한 JSON 파싱 처리
-raw_text = response.text.strip()
+raw_text = response.text.strip() if response and response.text else ""
 analysis = {}
 
 json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
@@ -131,7 +136,7 @@ if json_match:
 
 if not analysis:
     analysis = {
-        "summary": response.text[:250],
+        "summary": raw_text[:250] if raw_text else issue_title,
         "category": "일반",
         "tags": ["스크랩"],
         "ocr_text": "",
