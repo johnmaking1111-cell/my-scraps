@@ -32,45 +32,65 @@ os.makedirs("scraps", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 os.makedirs("images", exist_ok=True)
 
-# 마크다운 및 HTML <img> 태그 모두에서 이미지 URL 추출
+# 본문에서 모든 이미지 주소 추출
 image_markdown_urls = re.findall(r'!\[.*?\]\((https?://[^\s\)]+)\)', issue_body)
 image_html_urls = re.findall(r'<img[^>]+src=[\"\'](https?://[^\'\"\s>]+)[\"\']', issue_body)
-all_image_urls = list(dict.fromkeys(image_markdown_urls + image_html_urls))
+raw_attachment_urls = re.findall(r'(https?://github\.com/user-attachments/assets/[^\s\"\'\)]+)', issue_body)
+all_image_urls = list(dict.fromkeys(image_markdown_urls + image_html_urls + raw_attachment_urls))
 
-# 이미지 다운로드 처리
-saved_images = []
-headers = {"Authorization": f"token {github_token}", "User-Agent": "Mozilla/5.0"} if github_token else {"User-Agent": "Mozilla/5.0"}
+print(f"발견된 이미지 URL 개수: {len(all_image_urls)}")
 
-for idx, img_url in enumerate(all_image_urls):
+# 다중 헤더 시도를 통한 안전한 이미지 다운로드 함수
+def fetch_image_bytes(url):
+    # 1차 시도: 일반 웹 브라우저 헤더 (공개 저장소/AWS 리다이렉트 대응)
     try:
-        res = requests.get(img_url, headers=headers, timeout=20)
-        if res.status_code == 200:
-            ext = img_url.split("?")[0].split(".")[-1].lower()
-            if len(ext) > 4 or "/" in ext or ext not in ["jpg", "jpeg", "png", "webp"]:
-                ext = "jpg"
-            img_filename = f"images/scrap_{issue_number}_{idx+1}.{ext}"
-            with open(img_filename, "wb") as f:
-                f.write(res.content)
-            saved_images.append(img_filename)
-            print(f"이미지 다운로드 완료: {img_filename}")
-        else:
-            print(f"이미지 다운로드 응답 코드: {res.status_code}")
-    except Exception as e:
-        print(f"이미지 다운로드 예외 발생 ({img_url}): {e}")
+        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}, timeout=20)
+        if res.status_code == 200 and len(res.content) > 0:
+            return res.content
+    except Exception:
+        pass
+    
+    # 2차 시도: GitHub 인증 토큰 헤더
+    if github_token:
+        try:
+            res = requests.get(url, headers={"Authorization": f"token {github_token}", "User-Agent": "Mozilla/5.0"}, timeout=20)
+            if res.status_code == 200 and len(res.content) > 0:
+                return res.content
+        except Exception:
+            pass
+    return None
+
+saved_images = []
+for idx, img_url in enumerate(all_image_urls):
+    content = fetch_image_bytes(img_url)
+    if content:
+        ext = "jpg"
+        if ".png" in img_url.lower():
+            ext = "png"
+        elif ".webp" in img_url.lower():
+            ext = "webp"
+        
+        img_filename = f"images/scrap_{issue_number}_{idx+1}.{ext}"
+        with open(img_filename, "wb") as f:
+            f.write(content)
+        saved_images.append(img_filename)
+        print(f"이미지 저장 성공: {img_filename} ({len(content)} bytes)")
+    else:
+        print(f"이미지 다운로드 최종 실패: {img_url}")
 
 # Gemini API 클라이언트 초기화
 client = genai.Client(api_key=api_key)
 
 prompt = f"""
 당신은 개인 지식 아카이빙 전문가입니다.
-사용자가 수집한 정보(제목: '{issue_title}', 내용: '{issue_body}')를 분석하여 JSON 형식으로 구조화해 주세요.
+사용자가 수집한 정보(제목: '{issue_title}', 본문: '{issue_body}')와 함께 제공된 이미지를 시각적으로 꼼꼼히 분석하여 JSON 형식으로 구조화해 주세요.
 
 규칙:
-1. `summary`: 핵심 내용 2~3줄 요약 (한국어)
-2. `category`: 주 카테고리 1개 (예: 반려동물, 사진/조명, 디자인, 테크, 비즈니스 등)
+1. `summary`: 이미지의 내용과 본문 핵심을 포함한 2~3줄 요약 (한국어)
+2. `category`: 주 카테고리 1개 (예: 반려동물, 사진/조명, 디자인, 인테리어, 테크 등)
 3. `tags`: 검색용 키워드 태그 3~6개 리스트 (문자열 배열)
-4. `ocr_text`: 이미지 속 텍스트가 있다면 추출 (없으면 빈 문자열)
-5. `user_intent`: 사용자가 이 정보를 왜 저장했는지 추정되는 목적 1줄
+4. `ocr_text`: 이미지 속 텍스트가 있다면 글자 그대로 추출 (없으면 빈 문자열)
+5. `user_intent`: 사용자가 이 시각자료를 저장한 실질적 목적 추정 1줄
 
 반드시 순수 JSON 형식만 반환하세요.
 """
@@ -83,17 +103,16 @@ for img_path in saved_images:
         mime = "image/png" if img_path.endswith(".png") else "image/jpeg"
         contents.append(types.Part.from_bytes(data=img_bytes, mime_type=mime))
     except Exception as e:
-        print(f"이미지 파트 생성 실패: {e}")
+        print(f"이미지 첨부 실패: {e}")
 
-print("최신 Gemini 3.6 Flash 모델로 분석 요청 중...")
-model_candidate = "gemini-3.6-flash"
+print("Gemini 3.6 Flash 모델로 분석 요청 중...")
 try:
     response = client.models.generate_content(
-        model=model_candidate,
+        model="gemini-3.6-flash",
         contents=contents
     )
 except Exception as e:
-    print(f"{model_candidate} 실패, 대체 모델(gemini-3.5-flash) 시도: {e}")
+    print(f"기본 모델 실패, 대체 모델 시도: {e}")
     response = client.models.generate_content(
         model="gemini-3.5-flash",
         contents=contents
@@ -191,9 +210,10 @@ if github_token and repo:
 * **분류**: `{analysis.get('category', '일반')}`
 * **태그**: {tag_list_str}
 * **요약**: {analysis.get('summary', '')}
+* **이미지 저장**: {f'{len(saved_images)}장 저장됨' if saved_images else '없음'}
 * **저장 파일**: `{md_filename}`
 """
-    requests.post(comment_url, headers=headers, json={"body": comment_body})
-    requests.patch(f"https://api.github.com/repos/{repo}/issues/{issue_number}", headers=headers, json={"state": "closed"})
+    requests.post(comment_url, headers={"Authorization": f"token {github_token}", "User-Agent": "Mozilla/5.0"}, json={"body": comment_body})
+    requests.patch(f"https://api.github.com/repos/{repo}/issues/{issue_number}", headers={"Authorization": f"token {github_token}", "User-Agent": "Mozilla/5.0"}, json={"state": "closed"})
 
 print("처리가 정상적으로 완료되었습니다.")
