@@ -6,12 +6,25 @@ import requests
 from google import genai
 from google.genai import types
 
-# 환경 변수 로드
-api_key = os.environ.get("GEMINI_API_KEY")
-github_token = os.environ.get("GITHUB_TOKEN")
-issue_number = os.environ.get("ISSUE_NUMBER")
+# GitHub Event 파일에서 이슈 정보 안전하게 추출
+event_path = os.environ.get("GITHUB_EVENT_PATH")
+issue_number = os.environ.get("ISSUE_NUMBER", "1")
 issue_title = os.environ.get("ISSUE_TITLE", "")
 issue_body = os.environ.get("ISSUE_BODY", "")
+
+if event_path and os.path.exists(event_path):
+    try:
+        with open(event_path, "r", encoding="utf-8") as f:
+            event_data = json.load(f)
+        issue = event_data.get("issue", {})
+        issue_number = str(issue.get("number", issue_number))
+        issue_title = issue.get("title", issue_title)
+        issue_body = issue.get("body", issue_body) or ""
+    except Exception as e:
+        print(f"이벤트 데이터 로드 실패: {e}")
+
+api_key = os.environ.get("GEMINI_API_KEY")
+github_token = os.environ.get("GITHUB_TOKEN")
 repo = os.environ.get("GITHUB_REPOSITORY")
 
 # 폴더 생성
@@ -19,27 +32,29 @@ os.makedirs("scraps", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 os.makedirs("images", exist_ok=True)
 
-# URL 및 이미지 주소 추출
-urls = re.findall(r'(https?://[^\s\)]+)', issue_body)
-image_markdown_urls = re.findall(r'!\[.*?\]\((https?://.*?)\)', issue_body)
+# 본문에서 이미지 URL 추출
+image_markdown_urls = re.findall(r'!\[.*?\]\((https?://[^\s\)]+)\)', issue_body)
 
 # 이미지 다운로드 처리
 saved_images = []
-headers = {"Authorization": f"token {github_token}"} if github_token else {}
+headers = {"Authorization": f"token {github_token}", "User-Agent": "Mozilla/5.0"} if github_token else {"User-Agent": "Mozilla/5.0"}
 
 for idx, img_url in enumerate(image_markdown_urls):
     try:
-        res = requests.get(img_url, headers=headers, timeout=15)
+        res = requests.get(img_url, headers=headers, timeout=20)
         if res.status_code == 200:
-            ext = img_url.split("?")[0].split(".")[-1]
-            if len(ext) > 4 or "/" in ext:
+            ext = img_url.split("?")[0].split(".")[-1].lower()
+            if len(ext) > 4 or "/" in ext or ext not in ["jpg", "jpeg", "png", "webp"]:
                 ext = "jpg"
             img_filename = f"images/scrap_{issue_number}_{idx+1}.{ext}"
             with open(img_filename, "wb") as f:
                 f.write(res.content)
             saved_images.append(img_filename)
+            print(f"이미지 다운로드 완료: {img_filename}")
+        else:
+            print(f"이미지 다운로드 응답 코드: {res.status_code}")
     except Exception as e:
-        print(f"이미지 다운로드 실패 ({img_url}): {e}")
+        print(f"이미지 다운로드 예외 발생 ({img_url}): {e}")
 
 # Gemini API 클라이언트 초기화
 client = genai.Client(api_key=api_key)
@@ -48,33 +63,43 @@ prompt = f"""
 당신은 개인 지식 아카이빙 전문가입니다.
 사용자가 수집한 정보(제목: '{issue_title}', 내용: '{issue_body}')를 분석하여 JSON 형식으로 구조화해 주세요.
 
-다음 규칙을 반드시 지켜주세요:
+규칙:
 1. `summary`: 핵심 내용 2~3줄 요약 (한국어)
-2. `category`: 주 카테고리 1개 (예: 사진/조명, 디자인, 테크/코딩, 비즈니스, 라이프스타일 등 적절한 카테고리)
-3. `tags`: 검색용 키워드 태그 3~6개 리스트
+2. `category`: 주 카테고리 1개 (예: 사진/조명, 디자인, 테크/코딩, 비즈니스, 라이프스타일 등)
+3. `tags`: 검색용 키워드 태그 3~6개 리스트 (문자열 배열)
 4. `ocr_text`: 이미지 속 텍스트가 있다면 추출 (없으면 빈 문자열)
 5. `user_intent`: 사용자가 이 정보를 왜 저장했는지 추정되는 목적 1줄
 
-응답은 반드시 마크다운 코드블록(```json ... ```)을 포함한 JSON 형식이어야 합니다.
+반드시 순수 JSON 형식만 반환하세요.
 """
 
 contents = [prompt]
 for img_path in saved_images:
-    with open(img_path, "rb") as f:
-        img_bytes = f.read()
-    contents.append(types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"))
+    try:
+        with open(img_path, "rb") as f:
+            img_bytes = f.read()
+        mime = "image/png" if img_path.endswith(".png") else "image/jpeg"
+        contents.append(types.Part.from_bytes(data=img_bytes, mime_type=mime))
+    except Exception as e:
+        print(f"이미지 파트 생성 실패: {e}")
 
-# 제미나이 분석 실행
+print("Gemini API 분석 요청 중...")
 response = client.models.generate_content(
     model="gemini-2.5-flash",
     contents=contents
 )
 
 # JSON 파싱
-clean_text = response.text.replace("```json", "").replace("```", "").strip()
+raw_text = response.text.strip()
+if "```json" in raw_text:
+    raw_text = raw_text.split("```json").split("```")[0].strip()
+elif "```" in raw_text:
+    raw_text = raw_text.split("```").split("```")[0].strip()
+
 try:
-    analysis = json.loads(clean_text)
-except Exception:
+    analysis = json.loads(raw_text)
+except Exception as e:
+    print(f"JSON 파싱 실패, 기본 텍스트 사용: {e}")
     analysis = {
         "summary": response.text[:200],
         "category": "기타",
@@ -83,19 +108,27 @@ except Exception:
         "user_intent": issue_title
     }
 
-# 마크다운 파일 생성
+# 마크다운 내용 조립
 today = datetime.now().strftime("%Y-%m-%d")
 md_filename = f"scraps/{today}-scrap-{issue_number}.md"
 
-img_md = "\n".join([f"![image](../{img})" for img in saved_images])
-tags_str = ", ".join([f'"{t}"' for t in analysis.get("tags", [])])
+ocr_content = analysis.get("ocr_text", "")
+ocr_section = f"### 🔍 이미지 속 텍스트 (OCR)\n{ocr_content}\n\n" if ocr_content else ""
+
+images_section = ""
+if saved_images:
+    img_lines = [f"![image](../{img})" for img in saved_images]
+    images_section = "### 🖼️ 캡처 이미지\n" + "\n".join(img_lines) + "\n\n"
+
+tag_list_str = ", ".join(["#" + t for t in analysis.get("tags", [])])
+tag_yaml_str = ", ".join([f'"{t}"' for t in analysis.get("tags", [])])
 
 md_content = f"""---
 id: {issue_number}
 date: {today}
 title: "{issue_title}"
 category: "{analysis.get('category', '기타')}"
-tags: [{tags_str}]
+tags: [{tag_yaml_str}]
 user_intent: "{analysis.get('user_intent', '')}"
 ---
 
@@ -106,14 +139,12 @@ user_intent: "{analysis.get('user_intent', '')}"
 
 ### 🏷️ 태그 & 카테고리
 * **분류**: `{analysis.get('category', '기타')}`
-* **태그**: {', '.join(['#' + t for t in analysis.get('tags', [])])}
+* **태그**: {tag_list_str}
 
 ### 📝 원본 내용 / 메모
 {issue_body}
 
-{f"### 🔍 이미지 속 텍스트 (OCR)\n{analysis.get('ocr_text')}\n" if analysis.get('ocr_text') else ""}
-{f"### 🖼️ 캡처 이미지\n{img_md}\n" if img_md else ""}
-"""
+{ocr_section}{images_section}"""
 
 with open(md_filename, "w", encoding="utf-8") as f:
     f.write(md_content)
@@ -142,7 +173,7 @@ records.insert(0, {
 with open(index_path, "w", encoding="utf-8") as f:
     json.dump(records, f, ensure_ascii=False, indent=2)
 
-# Issue에 분석 완료 댓글 달고 이슈 닫기
+# Issue 댓글 및 이슈 닫기
 if github_token and repo:
     comment_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/comments"
     comment_body = f"""✅ **제미나이 자동 정리가 완료되었습니다!**
@@ -151,5 +182,6 @@ if github_token and repo:
 * **저장 파일**: `{md_filename}`
 """
     requests.post(comment_url, headers=headers, json={"body": comment_body})
-    # 이슈 종료
     requests.patch(f"https://api.github.com/repos/{repo}/issues/{issue_number}", headers=headers, json={"state": "closed"})
+
+print("처리가 정상적으로 완료되었습니다.")
