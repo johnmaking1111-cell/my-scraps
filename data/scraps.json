@@ -1,5 +1,22 @@
 [
   {
+    "id": "9",
+    "date": "2026-09-14",
+    "title": "자연스러운 톤의 프롬프트",
+    "category": "테크/AI",
+    "tags": [
+      "프롬프트",
+      "생성형AI",
+      "AI글쓰기",
+      "톤앤매너",
+      "ChatGPT"
+    ],
+    "summary": "생성형 AI 답변에서 기계적인 느낌을 줄이고 사람이 쓴 것 같은 자연스러운 톤앤매너를 구현하는 프롬프트 작성 팁을 다룹니다.\nAI 특유의 상투적인 표현을 지우고 실무나 콘텐츠 제작 시 바로 적용할 수 있는 프롬프트 활용법을 소개합니다.",
+    "source_url": "https://www.instagram.com/reel/DbU4_Dlz9Jc/?stkn=MXYyZThkeDNlb2FkYQ==",
+    "md_path": "scraps/2026-09-14-scrap-9.md",
+    "images": []
+  },
+  {
     "id": "8",
     "date": "2026-09-14",
     "title": "강아지포즈",
