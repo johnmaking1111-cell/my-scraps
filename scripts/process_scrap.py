@@ -6,7 +6,7 @@ import requests
 from google import genai
 from google.genai import types
 
-# GitHub Event 파일에서 이슈 정보 안전하게 추출
+# GitHub Event 파일에서 이슈 정보 추출
 event_path = os.environ.get("GITHUB_EVENT_PATH")
 issue_number = os.environ.get("ISSUE_NUMBER", "1")
 issue_title = os.environ.get("ISSUE_TITLE", "")
@@ -32,14 +32,16 @@ os.makedirs("scraps", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 os.makedirs("images", exist_ok=True)
 
-# 본문에서 이미지 URL 추출
+# 마크다운 및 HTML <img> 태그 모두에서 이미지 URL 추출
 image_markdown_urls = re.findall(r'!\[.*?\]\((https?://[^\s\)]+)\)', issue_body)
+image_html_urls = re.findall(r'<img[^>]+src=[\"\'](https?://[^\'\"\s>]+)[\"\']', issue_body)
+all_image_urls = list(dict.fromkeys(image_markdown_urls + image_html_urls))
 
 # 이미지 다운로드 처리
 saved_images = []
 headers = {"Authorization": f"token {github_token}", "User-Agent": "Mozilla/5.0"} if github_token else {"User-Agent": "Mozilla/5.0"}
 
-for idx, img_url in enumerate(image_markdown_urls):
+for idx, img_url in enumerate(all_image_urls):
     try:
         res = requests.get(img_url, headers=headers, timeout=20)
         if res.status_code == 200:
@@ -83,17 +85,24 @@ for img_path in saved_images:
     except Exception as e:
         print(f"이미지 파트 생성 실패: {e}")
 
-print("Gemini API 분석 요청 중...")
-response = client.models.generate_content(
-    model="gemini-2.5-flash",
-    contents=contents
-)
+print("최신 Gemini 3.6 Flash 모델로 분석 요청 중...")
+model_candidate = "gemini-3.6-flash"
+try:
+    response = client.models.generate_content(
+        model=model_candidate,
+        contents=contents
+    )
+except Exception as e:
+    print(f"{model_candidate} 실패, 대체 모델(gemini-3.5-flash) 시도: {e}")
+    response = client.models.generate_content(
+        model="gemini-3.5-flash",
+        contents=contents
+    )
 
 # 안전한 JSON 파싱 처리
 raw_text = response.text.strip()
 analysis = {}
 
-# 1) 정규표현식으로 JSON 블록({ ... }) 탐색
 json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
 if json_match:
     try:
@@ -101,7 +110,6 @@ if json_match:
     except Exception:
         pass
 
-# 2) 파싱 실패 시 기본값 안전 장치
 if not analysis:
     analysis = {
         "summary": response.text[:250],
