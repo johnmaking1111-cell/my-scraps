@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My AI Scrap Vault</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 20px; line-height: 1.6; }
+    header { max-width: 1200px; margin: 0 auto 30px; text-align: center; }
+    h1 { font-size: 2rem; margin-bottom: 8px; color: var(--text); }
+    p.sub { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px; }
+    
+    .search-box {
+      max-width: 500px; margin: 0 auto 20px; position: relative;
+    }
+    .search-box input {
+      width: 100%; padding: 12px 20px; border-radius: 25px; border: 1px solid var(--border);
+      background: var(--card-bg); color: #fff; font-size: 1rem; outline: none; transition: 0.2s;
+    }
+    .search-box input:focus { border-color: var(--accent); }
+
+    .grid {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+    }
+    .card {
+      background: var(--card-bg); border-radius: 14px; overflow: hidden; border: 1px solid var(--border);
+      transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); border-color: var(--accent); }
+    .card img {
+      width: 100%; max-height: 350px; object-fit: cover; background: #000; border-bottom: 1px solid var(--border);
+    }
+    .card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+    .meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.8rem; }
+    .badge {
+      background: rgba(56, 189, 248, 0.15); color: var(--accent); padding: 4px 10px; border-radius: 12px; font-weight: 600;
+    }
+    .date { color: var(--text-muted); }
+    .card-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 8px; color: #fff; }
+    .summary { font-size: 0.9rem; color: #cbd5e1; margin-bottom: 14px; flex: 1; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      background: #0f172a; border: 1px solid var(--border); color: #38bdf8; font-size: 0.75rem;
+      padding: 3px 8px; border-radius: 6px; text-decoration: none; cursor: pointer;
+    }
+    .empty { text-align: center; grid-column: 1 / -1; padding: 40px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>📂 My AI Scrap Vault</h1>
+    <p class="sub">제미나이가 자동으로 정리하고 분석한 스크랩 갤러리</p>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="키워드나 태그 검색... (예: 강아지, 조명, 팁)">
+    </div>
+  </header>
+
+  <div class="grid" id="cardGrid">
+    <div class="empty">데이터를 불러오는 중입니다...</div>
+  </div>
+
+  <script>
+    let allScraps = [];
+
+    async function loadData() {
+      try {
+        const res = await fetch('./data/scraps.json?t=' + new Date().getTime());
+        if (!res.ok) throw new Error("데이터 없음");
+        allScraps = await res.json();
+        renderCards(allScraps);
+      } catch (err) {
+        document.getElementById('cardGrid').innerHTML = '<div class="empty">아직 저장된 스크랩이 없습니다. 새 이슈를 등록해 보세요!</div>';
+      }
+    }
+
+    function renderCards(list) {
+      const grid = document.getElementById('cardGrid');
+      if (list.length === 0) {
+        grid.innerHTML = '<div class="empty">검색 결과가 없습니다.</div>';
+        return;
+      }
+      grid.innerHTML = list.map(item => {
+        const imgHtml = (item.images && item.images.length > 0)
+          ? `<img src="./${item.images[0]}" alt="${item.title}" loading="lazy">`
+          : '';
+        const tagsHtml = (item.tags || []).map(t => `<span class="tag" onclick="filterByTag('${t}')">#${t}</span>`).join('');
+
+        return `
+          <div class="card">
+            ${imgHtml}
+            <div class="card-body">
+              <div class="meta">
+                <span class="badge">${item.category || '기타'}</span>
+                <span class="date">${item.date}</span>
+              </div>
+              <div class="card-title">${item.title}</div>
+              <div class="summary">${item.summary || ''}</div>
+              <div class="tags">${tagsHtml}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const filtered = allScraps.filter(item => {
+        const title = (item.title || '').toLowerCase();
+        const summary = (item.summary || '').toLowerCase();
+        const category = (item.category || '').toLowerCase();
+        const tags = (item.tags || []).join(' ').toLowerCase();
+        return title.includes(query) || summary.includes(query) || category.includes(query) || tags.includes(query);
+      });
+      renderCards(filtered);
+    });
+
+    function filterByTag(tagName) {
+      document.getElementById('searchInput').value = tagName;
+      document.getElementById('searchInput').dispatchEvent(new Event('input'));
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
