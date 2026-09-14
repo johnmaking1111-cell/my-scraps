@@ -32,13 +32,16 @@ os.makedirs("scraps", exist_ok=True)
 os.makedirs("data", exist_ok=True)
 os.makedirs("images", exist_ok=True)
 
-# 본문에서 모든 이미지 주소 추출
+# 1. 본문에서 외부 원문 링크(URL) 추출 (릴스, 블로그, 유튜브 등)
+raw_urls = re.findall(r'(https?://[^\s\)\"\'>]+)', issue_body)
+external_urls = [u for u in raw_urls if "github.com/user-attachments" not in u and not u.endswith(('.jpg', '.png', '.webp', '.jpeg'))]
+source_url = external_urls[0] if external_urls else ""
+
+# 2. 본문에서 이미지 주소 추출
 image_markdown_urls = re.findall(r'!\[.*?\]\((https?://[^\s\)]+)\)', issue_body)
 image_html_urls = re.findall(r'<img[^>]+src=[\"\'](https?://[^\'\"\s>]+)[\"\']', issue_body)
 raw_attachment_urls = re.findall(r'(https?://github\.com/user-attachments/assets/[^\s\"\'\)]+)', issue_body)
 all_image_urls = list(dict.fromkeys(image_markdown_urls + image_html_urls + raw_attachment_urls))
-
-print(f"발견된 이미지 URL 개수: {len(all_image_urls)}")
 
 # 다중 헤더 시도를 통한 안전한 이미지 다운로드 함수
 def fetch_image_bytes(url):
@@ -72,18 +75,16 @@ for idx, img_url in enumerate(all_image_urls):
             f.write(content)
         saved_images.append(img_filename)
         print(f"이미지 저장 성공: {img_filename}")
-    else:
-        print(f"이미지 다운로드 실패: {img_url}")
 
 # Gemini API 클라이언트 초기화
 client = genai.Client(api_key=api_key)
 
 prompt = f"""
 당신은 개인 지식 아카이빙 전문가입니다.
-사용자가 수집한 정보(제목: '{issue_title}', 본문: '{issue_body}')와 이미지를 꼼꼼히 분석하여 JSON 형식으로 구조화해 주세요.
+사용자가 수집한 정보(제목: '{issue_title}', 본문: '{issue_body}')를 분석하여 JSON 형식으로 구조화해 주세요.
 
 규칙:
-1. `summary`: 이미지의 내용과 본문 핵심을 포함한 2~3줄 요약 (한국어)
+1. `summary`: 핵심 내용 2~3줄 요약 (한국어)
 2. `category`: 주 카테고리 1개 (예: 반려동물, 사진/조명, 디자인, 인테리어, 테크 등)
 3. `tags`: 검색용 키워드 태그 3~6개 리스트 (문자열 배열)
 4. `ocr_text`: 이미지 속 텍스트가 있다면 글자 그대로 추출 (없으면 빈 문자열)
@@ -102,12 +103,12 @@ for img_path in saved_images:
     except Exception as e:
         print(f"이미지 첨부 실패: {e}")
 
-# 구글 서버 과부하(503) 대응: 자동 재시도 및 대체 모델 캐스케이드
+# 구글 서버 과부하(503) 대응 캐스케이드
 candidate_models = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite"]
 response = None
 
 for model_name in candidate_models:
-    for attempt in range(2):  # 각 모델당 2회 재시도
+    for attempt in range(2):
         try:
             print(f"[{model_name}] 분석 요청 중... (시도 {attempt+1})")
             response = client.models.generate_content(
@@ -117,13 +118,11 @@ for model_name in candidate_models:
             if response and response.text:
                 break
         except Exception as e:
-            print(f"[{model_name}] 일시적 오류 발생: {e}")
-            time.sleep(3)  # 3초 대기 후 재시도
+            print(f"[{model_name}] 오류 발생: {e}")
+            time.sleep(3)
     if response and response.text:
-        print(f"[{model_name}] 성공!")
         break
 
-# 안전한 JSON 파싱 처리
 raw_text = response.text.strip() if response and response.text else ""
 analysis = {}
 
@@ -155,6 +154,8 @@ if saved_images:
     img_lines = [f"![image](../{img})" for img in saved_images]
     images_section = "### 🖼️ 캡처 이미지\n" + "\n".join(img_lines) + "\n\n"
 
+source_link_section = f"### 🔗 원문 링크\n[{source_url}]({source_url})\n\n" if source_url else ""
+
 tag_list_str = ", ".join(["#" + str(t) for t in analysis.get("tags", [])])
 tag_yaml_str = ", ".join([f'"{t}"' for t in analysis.get("tags", [])])
 
@@ -164,6 +165,7 @@ date: {today}
 title: "{issue_title}"
 category: "{analysis.get('category', '일반')}"
 tags: [{tag_yaml_str}]
+source_url: "{source_url}"
 user_intent: "{analysis.get('user_intent', '')}"
 ---
 
@@ -176,7 +178,7 @@ user_intent: "{analysis.get('user_intent', '')}"
 * **분류**: `{analysis.get('category', '일반')}`
 * **태그**: {tag_list_str}
 
-### 📝 원본 내용 / 메모
+{source_link_section}### 📝 원본 내용 / 메모
 {issue_body}
 
 {ocr_section}{images_section}"""
@@ -201,6 +203,7 @@ records.insert(0, {
     "category": analysis.get("category", "일반"),
     "tags": analysis.get("tags", []),
     "summary": analysis.get("summary", ""),
+    "source_url": source_url,
     "md_path": md_filename,
     "images": saved_images
 })
@@ -214,6 +217,7 @@ if github_token and repo:
     comment_body = f"""✅ **제미나이 자동 정리가 완료되었습니다!**
 * **분류**: `{analysis.get('category', '일반')}`
 * **태그**: {tag_list_str}
+* **원문 링크**: {source_url if source_url else '없음'}
 * **요약**: {analysis.get('summary', '')}
 * **이미지 저장**: {f'{len(saved_images)}장 저장됨' if saved_images else '없음'}
 * **저장 파일**: `{md_filename}`
