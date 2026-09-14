@@ -1,0 +1,42 @@
+name: Process Scrap with Gemini
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  analyze_and_save:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install google-genai requests
+
+      - name: Run Scrap Processor
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          python scripts/process_scrap.py
+
+      - name: Commit and Push results
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add scraps/ data/ images/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-archive scrap #${{ github.event.issue.number }}" && git push)
