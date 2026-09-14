@@ -48,11 +48,17 @@
     .date { color: var(--text-muted); }
     .card-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 8px; color: #fff; }
     .summary { font-size: 0.9rem; color: #cbd5e1; margin-bottom: 14px; flex: 1; }
-    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     .tag {
       background: #0f172a; border: 1px solid var(--border); color: #38bdf8; font-size: 0.75rem;
       padding: 3px 8px; border-radius: 6px; text-decoration: none; cursor: pointer;
     }
+    .link-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 14px; background: #0284c7; color: #fff; text-decoration: none;
+      border-radius: 8px; font-size: 0.85rem; font-weight: 600; transition: background 0.2s;
+    }
+    .link-btn:hover { background: #0369a1; }
     .empty { text-align: center; grid-column: 1 / -1; padding: 40px; color: var(--text-muted); }
   </style>
 </head>
@@ -95,6 +101,11 @@
           ? `<img src="./${item.images[0]}" alt="${item.title}" loading="lazy">`
           : '';
         const tagsHtml = (item.tags || []).map(t => `<span class="tag" onclick="filterByTag('${t}')">#${t}</span>`).join('');
+        
+        // 원문 링크 버튼
+        const linkBtnHtml = item.source_url
+          ? `<a href="${item.source_url}" target="_blank" rel="noopener noreferrer" class="link-btn">🔗 원문 보러가기</a>`
+          : '';
 
         return `
           <div class="card">
@@ -107,6 +118,7 @@
               <div class="card-title">${item.title}</div>
               <div class="summary">${item.summary || ''}</div>
               <div class="tags">${tagsHtml}</div>
+              ${linkBtnHtml}
             </div>
           </div>
         `;
