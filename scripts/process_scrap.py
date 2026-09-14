@@ -65,7 +65,7 @@ prompt = f"""
 
 규칙:
 1. `summary`: 핵심 내용 2~3줄 요약 (한국어)
-2. `category`: 주 카테고리 1개 (예: 사진/조명, 디자인, 테크/코딩, 비즈니스, 라이프스타일 등)
+2. `category`: 주 카테고리 1개 (예: 반려동물, 사진/조명, 디자인, 테크, 비즈니스 등)
 3. `tags`: 검색용 키워드 태그 3~6개 리스트 (문자열 배열)
 4. `ocr_text`: 이미지 속 텍스트가 있다면 추출 (없으면 빈 문자열)
 5. `user_intent`: 사용자가 이 정보를 왜 저장했는지 추정되는 목적 1줄
@@ -89,20 +89,23 @@ response = client.models.generate_content(
     contents=contents
 )
 
-# JSON 파싱
+# 안전한 JSON 파싱 처리
 raw_text = response.text.strip()
-if "```json" in raw_text:
-    raw_text = raw_text.split("```json").split("```")[0].strip()
-elif "```" in raw_text:
-    raw_text = raw_text.split("```").split("```")[0].strip()
+analysis = {}
 
-try:
-    analysis = json.loads(raw_text)
-except Exception as e:
-    print(f"JSON 파싱 실패, 기본 텍스트 사용: {e}")
+# 1) 정규표현식으로 JSON 블록({ ... }) 탐색
+json_match = re.search(r'\{.*\}', raw_text, re.DOTALL)
+if json_match:
+    try:
+        analysis = json.loads(json_match.group(0))
+    except Exception:
+        pass
+
+# 2) 파싱 실패 시 기본값 안전 장치
+if not analysis:
     analysis = {
-        "summary": response.text[:200],
-        "category": "기타",
+        "summary": response.text[:250],
+        "category": "일반",
         "tags": ["스크랩"],
         "ocr_text": "",
         "user_intent": issue_title
@@ -120,14 +123,14 @@ if saved_images:
     img_lines = [f"![image](../{img})" for img in saved_images]
     images_section = "### 🖼️ 캡처 이미지\n" + "\n".join(img_lines) + "\n\n"
 
-tag_list_str = ", ".join(["#" + t for t in analysis.get("tags", [])])
+tag_list_str = ", ".join(["#" + str(t) for t in analysis.get("tags", [])])
 tag_yaml_str = ", ".join([f'"{t}"' for t in analysis.get("tags", [])])
 
 md_content = f"""---
 id: {issue_number}
 date: {today}
 title: "{issue_title}"
-category: "{analysis.get('category', '기타')}"
+category: "{analysis.get('category', '일반')}"
 tags: [{tag_yaml_str}]
 user_intent: "{analysis.get('user_intent', '')}"
 ---
@@ -138,7 +141,7 @@ user_intent: "{analysis.get('user_intent', '')}"
 {analysis.get('summary', '')}
 
 ### 🏷️ 태그 & 카테고리
-* **분류**: `{analysis.get('category', '기타')}`
+* **분류**: `{analysis.get('category', '일반')}`
 * **태그**: {tag_list_str}
 
 ### 📝 원본 내용 / 메모
@@ -163,7 +166,7 @@ records.insert(0, {
     "id": issue_number,
     "date": today,
     "title": issue_title,
-    "category": analysis.get("category", "기타"),
+    "category": analysis.get("category", "일반"),
     "tags": analysis.get("tags", []),
     "summary": analysis.get("summary", ""),
     "md_path": md_filename,
@@ -177,7 +180,8 @@ with open(index_path, "w", encoding="utf-8") as f:
 if github_token and repo:
     comment_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}/comments"
     comment_body = f"""✅ **제미나이 자동 정리가 완료되었습니다!**
-* **분류**: `{analysis.get('category', '기타')}`
+* **분류**: `{analysis.get('category', '일반')}`
+* **태그**: {tag_list_str}
 * **요약**: {analysis.get('summary', '')}
 * **저장 파일**: `{md_filename}`
 """
