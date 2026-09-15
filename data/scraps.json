@@ -1,5 +1,25 @@
 [
   {
+    "id": "12",
+    "date": "2026-09-15",
+    "title": "프롬프트 잘 만드는사람",
+    "category": "테크",
+    "tags": [
+      "AI프롬프트",
+      "이미지생성AI",
+      "PhilFranco",
+      "AdobeFirefly",
+      "인스타그램계정",
+      "AI툴"
+    ],
+    "summary": "AI 툴 전문가이자 Adobe Firefly 앰버서더인 'Phil Franco(@ai.withphil)'의 인스타그램 프로필 스크린샷입니다. 이미지 생성 AI 프롬프트, 리포맷/릴라이팅 가이드, 참고용 리퍼런스 보드 등 유용한 AI 관련 콘텐츠가 게시되어 있습니다.",
+    "source_url": "",
+    "md_path": "scraps/2026-09-15-scrap-12.md",
+    "images": [
+      "images/scrap_12_1.jpg"
+    ]
+  },
+  {
     "id": "11",
     "date": "2026-09-14",
     "title": "꽃",
