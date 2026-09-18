@@ -1,5 +1,22 @@
 [
   {
+    "id": "14",
+    "date": "2026-09-18",
+    "title": "지피티 질문법",
+    "category": "테크",
+    "tags": [
+      "지피티",
+      "프롬프트엔지니어링",
+      "AI활용",
+      "생성형AI",
+      "업무효율화"
+    ],
+    "summary": "AI와의 대화에서 더 나은 답변을 얻기 위한 체계적인 질문 설계법을 다룹니다. 역할 부여, 맥락 설명, 명확한 제약 조건 설정을 통해 원하는 결과물의 품질을 높이는 실용적인 전략을 설명합니다.",
+    "source_url": "https://www.instagram.com/reel/DdYpV7-A7PJ/?stkn=NmpkNndob2kxdGtn",
+    "md_path": "scraps/2026-09-18-scrap-14.md",
+    "images": []
+  },
+  {
     "id": "13",
     "date": "2026-09-15",
     "title": "카툰프롬프트",
