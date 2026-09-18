@@ -1,5 +1,23 @@
 [
   {
+    "id": "16",
+    "date": "2026-09-18",
+    "title": "제미나이 옴니",
+    "category": "테크",
+    "tags": [
+      "제미나이",
+      "GeminiOmni",
+      "구글AI",
+      "멀티모달",
+      "인공지능",
+      "최신기술"
+    ],
+    "summary": "구글의 최신 AI 모델인 제미나이 옴니(Gemini Omni)의 실시간 멀티모달 처리 능력을 보여주는 영상입니다. 텍스트, 이미지, 음성을 동시에 이해하고 인간과 즉각적으로 상호작용하는 시연을 담고 있습니다.",
+    "source_url": "https://www.instagram.com/reel/DcCTg-8qKfQ/?stkn=YnZ4ZHJnaWUzcTZj",
+    "md_path": "scraps/2026-09-18-scrap-16.md",
+    "images": []
+  },
+  {
     "id": "15",
     "date": "2026-09-18",
     "title": "영상 베껴서 재창조하는법",
