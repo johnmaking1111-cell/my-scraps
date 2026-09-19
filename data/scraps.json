@@ -1,5 +1,22 @@
 [
   {
+    "id": "19",
+    "date": "2026-09-19",
+    "title": "마케팅 잊지말것",
+    "category": "마케팅",
+    "tags": [
+      "마케팅",
+      "인스타그램",
+      "릴스",
+      "숏폼콘텐츠",
+      "마케팅전략"
+    ],
+    "summary": "인스타그램 릴스를 활용한 마케팅 트렌드 및 주요 전략을 담은 숏폼 콘텐츠입니다.\n마케팅 실행 시 놓치지 말아야 할 핵심 노하우와 효과적인 전달 방식을 제시합니다.",
+    "source_url": "https://www.instagram.com/reel/DdEgS4Gpj-h/?stkn=cXQ2dGRkbmp3NHd2",
+    "md_path": "scraps/2026-09-19-scrap-19.md",
+    "images": []
+  },
+  {
     "id": "18",
     "date": "2026-09-19",
     "title": "빈티지그림 프로프트",
