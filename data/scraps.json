@@ -1,5 +1,22 @@
 [
   {
+    "id": "18",
+    "date": "2026-09-19",
+    "title": "빈티지그림 프로프트",
+    "category": "디자인",
+    "tags": [
+      "빈티지",
+      "프롬프트",
+      "AI아트",
+      "일러스트",
+      "생성형AI"
+    ],
+    "summary": "빈티지한 스타일의 일러스트 및 이미지를 생성할 수 있는 AI 프롬프트 정보가 담긴 인스타그램 링크입니다. 고전적인 감성의 아트를 구현하기 위한 키워드와 스타일 가이드 정보를 포함하고 있습니다.",
+    "source_url": "https://www.instagram.com/p/Dci6AfkEQQF/?stkn=MTN5c2d1ZmVtMXpw",
+    "md_path": "scraps/2026-09-19-scrap-18.md",
+    "images": []
+  },
+  {
     "id": "17",
     "date": "2026-09-18",
     "title": "강아지 러브 글씨만들기",
