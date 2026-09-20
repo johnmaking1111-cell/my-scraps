@@ -1,5 +1,22 @@
 [
   {
+    "id": "22",
+    "date": "2026-09-20",
+    "title": "ai홈페이지만드는 회사",
+    "category": "테크",
+    "tags": [
+      "AI홈페이지",
+      "웹사이트제작",
+      "AI툴",
+      "노코드",
+      "웹디자인"
+    ],
+    "summary": "AI 기술을 활용하여 쉽고 빠르게 웹사이트를 자동으로 제작해주는 서비스 및 전문 기업을 소개하는 콘텐츠입니다. 코딩이나 전문 디자인 지식 없이도 단시간 내에 맞춤형 홈페이지를 구축하는 방법과 관련 툴을 다루고 있습니다.",
+    "source_url": "https://www.instagram.com/reel/DdTjEQcTMos/?stkn=MmNwa2F4MmlnaWJj",
+    "md_path": "scraps/2026-09-20-scrap-22.md",
+    "images": []
+  },
+  {
     "id": "21",
     "date": "2026-09-20",
     "title": "티셔츠 사업",
