@@ -1,5 +1,22 @@
 [
   {
+    "id": "25",
+    "date": "2026-09-22",
+    "title": "8k 프롬프트",
+    "category": "AI/테크",
+    "tags": [
+      "8K",
+      "AI프롬프트",
+      "AI이미지",
+      "미드저니",
+      "이미지생성"
+    ],
+    "summary": "고화질(8K) AI 이미지를 생성하기 위한 프롬프트 작성법과 핵심 키워드를 소개하는 콘텐츠입니다. 이미지 생성 AI 활용 시 디테일과 화질을 극대화할 수 있는 프롬프트 구조를 제공합니다.",
+    "source_url": "https://www.instagram.com/reel/DdjTScusz2J/?stkn=MWh4eTJydHh5ODJuMw==",
+    "md_path": "scraps/2026-09-22-scrap-25.md",
+    "images": []
+  },
+  {
     "id": "24",
     "date": "2026-09-22",
     "title": "스튜디오 강아지찍는 순서",
