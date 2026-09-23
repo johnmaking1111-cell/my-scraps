@@ -1,5 +1,22 @@
 [
   {
+    "id": "30",
+    "date": "2026-09-23",
+    "title": "프롬프트해킹",
+    "category": "테크",
+    "tags": [
+      "프롬프트해킹",
+      "프롬프트인젝션",
+      "생성형AI",
+      "LLM보안",
+      "AI기술"
+    ],
+    "summary": "LLM(대형 언어 모델)의 제약 조건을 우회하는 프롬프트 해킹 및 인젝션 기법에 대해 설명하는 콘텐츠입니다.\n생성형 AI의 보안 취약점 유형과 이를 악용한 공격 방식을 다루고 있습니다.\nAI 서비스 개발 및 운용 시 시스템 보안을 강화하고 위험을 예방하기 위한 가이드를 제공합니다.",
+    "source_url": "https://www.instagram.com/p/DdNguTCmGfp/?img_index=1&stkn=MXM4N2lucHJvZ3pkZw==",
+    "md_path": "scraps/2026-09-23-scrap-30.md",
+    "images": []
+  },
+  {
     "id": "29",
     "date": "2026-09-23",
     "title": "표정 프롬프트",
