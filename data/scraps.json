@@ -1,5 +1,22 @@
 [
   {
+    "id": "28",
+    "date": "2026-09-23",
+    "title": "이중턱 리터칭",
+    "category": "사진/보정",
+    "tags": [
+      "이중턱보정",
+      "인물보정",
+      "포토샵",
+      "사진리터칭",
+      "뷰티리터칭"
+    ],
+    "summary": "인물 사진 보정 시 이중턱을 자연스럽게 보정하는 방법을 소개하는 인스타그램 릴스 영상입니다.\n포토샵 등 보정 툴을 활용하여 인물의 턱선을 매끄럽고 입체감 있게 리터칭하는 실무 팁을 다룹니다.",
+    "source_url": "https://www.instagram.com/reel/Ddg56OTOPFb/?stkn=MWVndWhsem5zNWRsZA==",
+    "md_path": "scraps/2026-09-23-scrap-28.md",
+    "images": []
+  },
+  {
     "id": "27",
     "date": "2026-09-23",
     "title": "사진복원 프롬프트",
