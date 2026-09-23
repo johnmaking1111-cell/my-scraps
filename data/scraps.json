@@ -1,5 +1,22 @@
 [
   {
+    "id": "29",
+    "date": "2026-09-23",
+    "title": "표정 프롬프트",
+    "category": "생성형 AI",
+    "tags": [
+      "표정프롬프트",
+      "AI이미지",
+      "미드저니",
+      "프롬프트엔지니어링",
+      "AI아트"
+    ],
+    "summary": "생성형 AI를 활용하여 인물 이미지를 생성할 때 원하는 감정과 표정을 정교하게 연출하기 위한 프롬프트 키워드 모음입니다.\n상황별, 감정별 표정 묘사 어휘가 정리되어 있어 AI 아트 및 캐릭터 디자인 작업 시 유용한 참고 자료입니다.",
+    "source_url": "https://www.instagram.com/p/DdDoXRMibq4/?img_index=4&stkn=NXRsdjd3MG10dGYx",
+    "md_path": "scraps/2026-09-23-scrap-29.md",
+    "images": []
+  },
+  {
     "id": "28",
     "date": "2026-09-23",
     "title": "이중턱 리터칭",
