@@ -1,5 +1,22 @@
 [
   {
+    "id": "31",
+    "date": "2026-09-28",
+    "title": "나를 바꾸는법",
+    "category": "자기계발",
+    "tags": [
+      "자기계발",
+      "습관형성",
+      "동기부여",
+      "라이프스타일",
+      "성장"
+    ],
+    "summary": "자신을 변화시키기 위해서는 작은 습관의 변화와 꾸준한 실천이 필수적입니다. 나쁜 습관을 버리고 긍정적인 루틴을 설계함으로써 삶의 질을 높이는 구체적인 자기계발 전략을 제시합니다.",
+    "source_url": "https://www.instagram.com/p/Ddy8KLmDx9G/?img_index=5&stkn=NWw2dHA5Nm9haTZw",
+    "md_path": "scraps/2026-09-28-scrap-31.md",
+    "images": []
+  },
+  {
     "id": "30",
     "date": "2026-09-23",
     "title": "프롬프트해킹",
