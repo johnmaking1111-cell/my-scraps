@@ -1,5 +1,22 @@
 [
   {
+    "id": "32",
+    "date": "2026-09-29",
+    "title": "옴니 동영상편집",
+    "category": "영상/편집",
+    "tags": [
+      "동영상편집",
+      "옴니",
+      "AI영상편집",
+      "영상제작",
+      "콘텐츠크리에이티브"
+    ],
+    "summary": "스레드(Threads)에서 공유된 옴니(Omni) 관련 동영상 편집 팁 및 정보입니다.\n최신 AI 기술이나 효율적인 영상 편집 도구를 활용해 영상 콘텐츠를 쉽게 제작하는 방법을 담고 있습니다.",
+    "source_url": "https://www.threads.com/share/BAbVhIGX0t/",
+    "md_path": "scraps/2026-09-29-scrap-32.md",
+    "images": []
+  },
+  {
     "id": "31",
     "date": "2026-09-28",
     "title": "나를 바꾸는법",
