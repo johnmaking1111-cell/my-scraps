@@ -1,5 +1,22 @@
 [
   {
+    "id": "34",
+    "date": "2026-10-02",
+    "title": "지피티 영상 자동화",
+    "category": "테크",
+    "tags": [
+      "ChatGPT",
+      "영상자동화",
+      "생성형AI",
+      "콘텐츠제작",
+      "숏폼"
+    ],
+    "summary": "ChatGPT를 활용하여 영상 제작 과정을 자동화하는 가이드 및 노하우를 담은 콘텐츠입니다.\n대본 생성부터 영상 편집 툴 연동까지 효율적인 콘텐츠 제작 파이프라인 구축 방법을 소개합니다.",
+    "source_url": "https://www.threads.com/share/BAamOlhWlZ/",
+    "md_path": "scraps/2026-10-02-scrap-34.md",
+    "images": []
+  },
+  {
     "id": "33",
     "date": "2026-09-29",
     "title": "레퍼런스 참조 사이트",
