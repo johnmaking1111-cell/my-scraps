@@ -1,5 +1,22 @@
 [
   {
+    "id": "35",
+    "date": "2026-10-03",
+    "title": "디테일높게 인물생성하기",
+    "category": "AI/테크",
+    "tags": [
+      "인물생성",
+      "AI이미지",
+      "프롬프트",
+      "디테일",
+      "생성형AI"
+    ],
+    "summary": "AI 이미지 생성 도구를 활용하여 높은 디테일의 인물 이미지를 제작하는 팁과 노하우를 담은 인스타그램 릴스 콘텐츠입니다.\n고품질 인물 연출을 위한 프롬프트 작성법 및 설정 가이드를 제공합니다.",
+    "source_url": "https://www.instagram.com/reel/DeCTF_oAO_o/?stkn=MWNsNG1mOXZ2M2gxeA==",
+    "md_path": "scraps/2026-10-03-scrap-35.md",
+    "images": []
+  },
+  {
     "id": "34",
     "date": "2026-10-02",
     "title": "지피티 영상 자동화",
