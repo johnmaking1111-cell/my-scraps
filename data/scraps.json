@@ -1,5 +1,23 @@
 [
   {
+    "id": "41",
+    "date": "2026-10-07",
+    "title": "디자인참조",
+    "category": "디자인",
+    "tags": [
+      "디자인참조",
+      "인스타그램",
+      "레퍼런스",
+      "영감수집",
+      "비주얼디자인",
+      "그래픽디자인"
+    ],
+    "summary": "사용자가 디자인 영감을 얻기 위해 스크랩한 인스타그램 콘텐츠 링크입니다.\n최신 트렌드 비주얼, 레이아웃, 색감 등 시각적 요소를 참고하기 위한 레퍼런스 자료입니다.",
+    "source_url": "https://www.instagram.com/p/Dd6oKKFkdVI/?img_index=2&stkn=Mml0cWRleDBlbXls",
+    "md_path": "scraps/2026-10-07-scrap-41.md",
+    "images": []
+  },
+  {
     "id": "40",
     "date": "2026-10-07",
     "title": "리얼스킨 프롬프트",
