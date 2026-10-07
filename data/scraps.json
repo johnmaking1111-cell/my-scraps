@@ -1,5 +1,22 @@
 [
   {
+    "id": "40",
+    "date": "2026-10-07",
+    "title": "리얼스킨 프롬프트",
+    "category": "AI/테크",
+    "tags": [
+      "AI프롬프트",
+      "리얼스킨",
+      "생성형AI",
+      "인물이미지",
+      "피부질감"
+    ],
+    "summary": "생성형 AI를 활용하여 사실적인 인물 피부 질감(리얼 스킨)을 구현하기 위한 프롬프트 가이드입니다.\nAI 이미지 생성 시 렌더링 느낌을 줄이고 자연스럽고 디테일한 피부 표면을 연출하는 노하우를 포함하고 있습니다.",
+    "source_url": "https://www.instagram.com/p/DduJlejn4Av/?img_index=2&stkn=MXN0eHMxNGt2cGQ1cw==",
+    "md_path": "scraps/2026-10-07-scrap-40.md",
+    "images": []
+  },
+  {
     "id": "39",
     "date": "2026-10-06",
     "title": "마케팅방법 꼭 해보자",
