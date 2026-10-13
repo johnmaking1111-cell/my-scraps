@@ -1,5 +1,22 @@
 [
   {
+    "id": "42",
+    "date": "2026-10-13",
+    "title": "릴스후킹",
+    "category": "SNS 마케팅",
+    "tags": [
+      "릴스",
+      "숏폼전략",
+      "콘텐츠마케팅",
+      "후킹문구",
+      "인스타그램운영"
+    ],
+    "summary": "인스타그램 릴스에서 시청자의 이목을 끌기 위한 5가지 후킹 전략을 제시합니다. 첫 문장에서 호기심을 유발하고, 시각적 변화나 질문을 통해 끝까지 영상을 시청하게 만드는 실전 노하우를 담고 있습니다.",
+    "source_url": "https://www.instagram.com/p/DeVZVk2CARI/?img_index=4&exln=OXRrMnJhbXo3YmRr",
+    "md_path": "scraps/2026-10-13-scrap-42.md",
+    "images": []
+  },
+  {
     "id": "41",
     "date": "2026-10-07",
     "title": "디자인참조",
